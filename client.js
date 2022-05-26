@@ -1,6 +1,11 @@
+
+
 const id = Math.floor(Math.random() * 1000);
 
 let fetchLib = require("node-fetch-commonjs");
+
+let url = "http://localhost:8080/subscribe";
+let eventSource = new EventSource(url);
 
 const solicitarRecurso_1 = async () => {
   const url = "http://localhost:8080/solicita_recurso_um";
