@@ -15,7 +15,8 @@ import org.json.JSONObject;
 @RestController
 public class FirstController {
   // Thread safe list of SSE emitters
-  public List<SseEmitter> emitters = new CopyOnWriteArrayList<SseEmitter>();
+  // public List<SseEmitter> emitters = new CopyOnWriteArrayList<SseEmitter>();
+  public Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
 
   @PostMapping("/solicita_recurso_um")
   public Map<String, String> solicitaRecurso_1 (@RequestBody long id) {
@@ -29,34 +30,50 @@ public class FirstController {
   // Método para a inscrição do cliente
   @CrossOrigin
   @RequestMapping(value = "/subscribe", consumes = MediaType.ALL_VALUE)
-  public SseEmitter subscribe() {
+  public SseEmitter subscribe(@RequestParam String userId) {
     SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
-    try {
-      sseEmitter.send(SseEmitter.event().name("INIT"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    
-    emitters.add(sseEmitter);
-    sseEmitter.onCompletion(() -> {
-      emitters.remove(sseEmitter);
-    });
+   
+    sendInitEvent(sseEmitter);
+
+    emitters.put(userId, sseEmitter);
+    sseEmitter.onCompletion(() -> { emitters.remove(userId); });
+    sseEmitter.onTimeout(() -> { emitters.remove(userId); });
+    sseEmitter.onError((e) -> { emitters.remove(userId); });
+
     return sseEmitter;
   }
 
-  // Método para o dispatch do evento para todos os clientes
+
+  // Método para o dispatch do evento para cliente específico
   @PostMapping(value = "/dispatchEvent")
-  public void dispatchEventToClients(@RequestParam String title, @RequestParam String text) {
+  public void dispatchEventToClients(@RequestParam String title, @RequestParam String text, @RequestParam String userId) {
     String eventFormatted = new JSONObject()
     .put("title", title)
     .put("text", text).toString();
     
-    for (SseEmitter emitter : emitters) {
+    SseEmitter sseEmitter = emitters.get(userId);
+    if (sseEmitter != null) {
       try {
-        emitter.send(SseEmitter.event().name("Latest").data(eventFormatted));
-      } catch (IOException e) {
-        emitters.remove(emitter);
+        sseEmitter.send(SseEmitter.event().name("Latest").data(eventFormatted));
+      } catch (Exception e) {
+        emitters.remove(userId);
       }
+    }
+
+    // for (SseEmitter emitter : emitters) {
+    //   try {
+    //     emitter.send(SseEmitter.event().name("Latest").data(eventFormatted));
+    //   } catch (IOException e) {
+    //     emitters.remove(emitter);
+    //   }
+    // }
+  }
+
+  private void sendInitEvent(SseEmitter sseEmitter) {
+    try {
+      sseEmitter.send(SseEmitter.event().name("INIT"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 

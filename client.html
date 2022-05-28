@@ -47,7 +47,7 @@
     $(document).ready(function () {
       var userId = Math.floor((Math.random() * 1000000) + 1);
       $("#userspan").text(userId);
-      let url = "http://localhost:8080/subscribe";
+      let url = "http://localhost:8080/subscribe?userId=" + userId;
       var eventSource = new EventSource(url);
 
       eventSource.addEventListener("Latest", function (event) {
