@@ -14,54 +14,76 @@
       background-color: #1a1a1a;
       color: #fff;
     }
+
     .navbar {
       height: 80px;
     }
+
     .navbar-brand {
       margin: auto;
       font-size: 2.5rem;
     }
+
     .panel {
       padding-top: 20px;
       padding-bottom: 20px;
     }
+
     h3 {
       display: flex;
       align-self: flex-start;
       color: orange;
       border-bottom: 1px solid white;
     }
+
     p {
       display: flex;
       align-self: flex-start;
       font-size: 2rem;
     }
+
     .pstyle {
       font-size: 2rem;
-      font-family: verdana,  sans-serif;
+      font-family: verdana, sans-serif;
     }
   </style>
   <title>Client</title>
 
   <script>
     $(document).ready(function () {
-      var userId = Math.floor((Math.random() * 1000000) + 1);
-      $("#userspan").text(userId);
-      let url = "http://localhost:8080/subscribe?userId=" + userId;
+      var clientId = Math.floor((Math.random() * 1000) + 1);
+      $("#userspan").text(clientId);
+      let url = "http://localhost:8080/subscribe?client_id=" + clientId;
       var eventSource = new EventSource(url);
 
-      eventSource.addEventListener("Latest", function (event) {
+      eventSource.addEventListener("ServerEvent", function (event) {
         let data = JSON.parse(event.data);
         addBlock(data.title, data.text)
       })
-    })
-    evtSource.addEventListener("error", function (event) {
-      console.log("Error: ", + event.currentTarget.readyState);
-    }, false);
 
-    window.onbeforeunload = () => { evtSource.close(); }
+      const button = document.getElementById('post-btn-1');
+      button.addEventListener('click', async _ => {
+        console.log(clientId);
+        try {
+          const response = await fetch('http://localhost:8080/solicita_recurso_um?clientId=' + clientId, {
+            method: 'POST',
+            body: {
+              clientId: clientId
+            }
+          });
+          console.log('Completed!', response);
+        } catch (err) {
+          console.error(`Error: ${err}`);
+        }
+      })
+    });
+    // eventSource.addEventListener("error", function (event) {
+    //   console.log("Error: ", + event.currentTarget.readyState);
+    // }, false);
 
-    function addBlock(title, text){
+    // window.onbeforeunload = () => { eventSource.close(); }
+
+    function addBlock(title, text) {
       let a = document.createElement("article");
       // title
       let h3 = document.createElement("h3");
@@ -72,10 +94,12 @@
       p.innerHTML = text;
       a.appendChild(h3);
       a.appendChild(p);
-      
+
       document.getElementById("pack").appendChild(a);
 
     }
+
+
 
     // eventSource.addEventListener('error', function (e) {
     //   if (e.currentTarget.readyState == EventSource.CLOSED) {
@@ -92,10 +116,14 @@
         <div class="navbar-brand">Events Received Here</div>
       </div>
     </div>
+    <button title="Solicitar 1" id="post-btn-1" style="color: black">Solicitar 1</button>
+    <button title="Solicitar 2" id="post-btn-2" style="color: black"">Solicitar 2</button>
+    <button title=" Liberar 1" id="post-btn-3" style="color: black"">Liberar 1</button>
+    <button title=" Liberar 2" id="post-btn-4" style="color: black">Liberar 2</button>
   </nav>
   <div class="container pstyle text-center" id="pack">
     <div class="panel panel-primary">
-      <span style="color: #000">Cliente: <strong><span id="userspan"></span></strong> </span> 
+      <span style="color: #000">Cliente: <strong><span id="userspan"></span></strong> </span>
     </div>
   </div>
 </body>
