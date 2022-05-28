@@ -6,25 +6,98 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <style>
     /* add dark theme */
     body {
       background-color: #1a1a1a;
       color: #fff;
     }
+    .navbar {
+      height: 80px;
+    }
+    .navbar-brand {
+      margin: auto;
+      font-size: 2.5rem;
+    }
+    .panel {
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+    h3 {
+      display: flex;
+      align-self: flex-start;
+      color: orange;
+      border-bottom: 1px solid white;
+    }
+    p {
+      display: flex;
+      align-self: flex-start;
+      font-size: 2rem;
+    }
+    .pstyle {
+      font-size: 2rem;
+      font-family: verdana,  sans-serif;
+    }
   </style>
   <title>Client</title>
 
   <script>
     $(document).ready(function () {
+      var userId = Math.floor((Math.random() * 1000000) + 1);
+      $("#userspan").text(userId);
       let url = "http://localhost:8080/subscribe";
-      let eventSource = new EventSource(url);
+      var eventSource = new EventSource(url);
+
+      eventSource.addEventListener("Latest", function (event) {
+        let data = JSON.parse(event.data);
+        addBlock(data.title, data.text)
+      })
     })
+    evtSource.addEventListener("error", function (event) {
+      console.log("Error: ", + event.currentTarget.readyState);
+    }, false);
+
+    window.onbeforeunload = () => { evtSource.close(); }
+
+    function addBlock(title, text){
+      let a = document.createElement("article");
+      // title
+      let h3 = document.createElement("h3");
+      let t = document.createTextNode(title);
+      h3.appendChild(t);
+      // Event Text
+      let p = document.createElement("p");
+      p.innerHTML = text;
+      a.appendChild(h3);
+      a.appendChild(p);
+      
+      document.getElementById("pack").appendChild(a);
+
+    }
+
+    // eventSource.addEventListener('error', function (e) {
+    //   if (e.currentTarget.readyState == EventSource.CLOSED) {
+    //     console.log('Connection was closed.');
+    //   }
+    // });
   </script>
 </head>
 
 <body>
-
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <div class="navbar-brand">Events Received Here</div>
+      </div>
+    </div>
+  </nav>
+  <div class="container pstyle text-center" id="pack">
+    <div class="panel panel-primary">
+      <span style="color: #000">Cliente: <strong><span id="userspan"></span></strong> </span> 
+    </div>
+  </div>
 </body>
 
 </html>

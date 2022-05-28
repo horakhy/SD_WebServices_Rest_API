@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import org.json.JSONObject;
+
 @RestController
 public class FirstController {
   // Thread safe list of SSE emitters
@@ -34,19 +36,24 @@ public class FirstController {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    emitters.add(sseEmitter);
     sseEmitter.onCompletion(() -> {
       emitters.remove(sseEmitter);
     });
-    emitters.add(sseEmitter);
     return sseEmitter;
   }
 
   // Método para o dispatch do evento para todos os clientes
   @PostMapping(value = "/dispatchEvent")
-  public void dispatchEventToClients(@RequestParam String event) {
+  public void dispatchEventToClients(@RequestParam String title, @RequestParam String text) {
+    String eventFormatted = new JSONObject()
+    .put("title", title)
+    .put("text", text).toString();
+    
     for (SseEmitter emitter : emitters) {
       try {
-        emitter.send(SseEmitter.event().name("Latest").data(event));
+        emitter.send(SseEmitter.event().name("Latest").data(eventFormatted));
       } catch (IOException e) {
         emitters.remove(emitter);
       }
